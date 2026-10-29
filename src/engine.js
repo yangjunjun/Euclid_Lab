@@ -1,3 +1,4 @@
+import { ADVANCED_LEVELS, ADVANCED_TOOLS, applyAdvancedAction, isAdvancedGoalComplete } from './advanced.js';
 // Euclid Lab · deterministic construction & proof rules.
 // Geometry is for display; theorem validation uses recorded logical facts only.
 export const LEVELS = [
@@ -5,7 +6,8 @@ export const LEVELS = [
   { id: 2, eyebrow: '入门 · 公设 III', title: '画出第一个圆', description: '以 A 为圆心，以 AB 为半径作圆。观察圆规实际上固定了什么。', target: '构造圆 (A, AB)', hint: '选择「作圆」，圆心 A，经过点 B。', tools: ['circle'] },
   { id: 3, eyebrow: '探索 · 交点', title: '双圆相交', description: '分别以 A、B 为圆心，以 AB 为半径作圆，并找出交点 C。', target: '作圆 A、作圆 B，取得交点 C', hint: '先分别作圆 (A, AB) 和 (B, BA)，再使用「取两圆交点」。', tools: ['circle', 'intersect'] },
   { id: 4, eyebrow: '《几何原本》· 命题 I.1', title: '证明等边三角形', description: '从公设出发构造三角形 ABC，再用半径相等、相等传递和定义完成严谨证明。', target: '证明 AB = AC = BC', hint: '先作两圆和交点 C，连接 AC、BC；用两次「半径相等」、一次「相等传递」和「等边定义」完成证明。', tools: ['segment', 'circle', 'intersect', 'radius', 'transitive', 'equilateral'] },
-  { id: 5, eyebrow: '进阶 · 定理复用', title: '让证明变成工具', description: '把上一关已经证明的命题封装成一块积木，只用一步在新线段 DE 上构造等边三角形。', target: '调用命题 I.1，构造 DEF', hint: '使用已解锁的「等边三角形构造」积木。', tools: ['reuse'] }
+  { id: 5, eyebrow: '进阶 · 定理复用', title: '让证明变成工具', description: '把上一关已经证明的命题封装成一块积木，只用一步在新线段 DE 上构造等边三角形。', target: '调用命题 I.1，构造 DEF', hint: '使用已解锁的「等边三角形构造」积木。', tools: ['reuse'] },
+  ...ADVANCED_LEVELS
 ];
 
 export const TOOLS = {
@@ -15,7 +17,8 @@ export const TOOLS = {
   radius: { icon: '=', name: '半径相等', group: '证明', subtitle: '圆的定义' },
   transitive: { icon: '⇒', name: '相等传递', group: '证明', subtitle: '共同概念 I' },
   equilateral: { icon: '△', name: '等边定义', group: '证明', subtitle: '由三边相等归结' },
-  reuse: { icon: '✦', name: '等边三角形构造', group: '已证明定理', subtitle: '命题 I.1 · 复用' }
+  reuse: { icon: '✦', name: '等边三角形构造', group: '已证明定理', subtitle: '命题 I.1 · 复用' },
+  ...ADVANCED_TOOLS
 };
 
 export function segmentKey(a, b) {
@@ -33,9 +36,13 @@ function labelSegment(key) {
 export function basePoints(level, positions = {}) {
   const a = level === 5 ? 'D' : 'A';
   const b = level === 5 ? 'E' : 'B';
+  const defaults = level >= 6 && level <= 9 ? { ax: 240, bx: 400, y: 280 }
+    : level >= 10 && level <= 14 ? { ax: 170, bx: 315, y: 300 }
+    : level === 15 ? { ax: 325, bx: 425, y: 295 }
+    : { ax: 210, bx: 430, y: 330 };
   return {
-    [a]: { x: positions[a]?.x ?? 210, y: positions[a]?.y ?? 330, fixed: true },
-    [b]: { x: positions[b]?.x ?? 430, y: positions[b]?.y ?? 330, fixed: true }
+    [a]: { x: positions[a]?.x ?? defaults.ax, y: positions[a]?.y ?? defaults.y, fixed: true },
+    [b]: { x: positions[b]?.x ?? defaults.bx, y: positions[b]?.y ?? defaults.y, fixed: true }
   };
 }
 export function initialState(level, positions = {}) {
@@ -75,6 +82,7 @@ function addFact(state, a, b, via) {
 export function applyAction(state, action, options = {}) {
   if (!action || !TOOLS[action.type]) return failure('未知的积木类型。');
   const next = structuredClone(state);
+  if (ADVANCED_TOOLS[action.type]) return applyAdvancedAction(next, action);
   const { a, b, type } = action;
   if (type === 'segment') {
     if (!point(next, a) || !point(next, b) || a === b) return failure('请选择两个不同的已知点。');
@@ -161,7 +169,7 @@ export function isGoalComplete(state) {
     case 3: return !!getCircle(state, circleId('A', 'B')) && !!getCircle(state, circleId('B', 'A')) && !!state.points.C;
     case 4: return state.theorems.includes('equilateral');
     case 5: return state.theorems.includes('reused-equilateral');
-    default: return false;
+    default: return isAdvancedGoalComplete(state);
   }
 }
 export function availablePoints(state) { return Object.keys(state.points).sort(); }
