@@ -16,4 +16,4 @@ jobs:
           node-version: '22'
       - run: node --check src/engine.js
       - run: node --check src/app.js
-      - run: node --test tests/engine.test.mjs
+      - run: node --test tests/*.test.mjs
