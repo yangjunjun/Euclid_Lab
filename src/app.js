@@ -27,6 +27,8 @@ return '<form id="block-form"><div class="form-title">'+escape(TOOLS[selected].i
 function render(){
 const previousProof=root.querySelector('.proof');
 const previousProofScroll=previousProof?.dataset.level===String(level)?previousProof.scrollTop:0;
+const previousLevelList=root.querySelector('.level-list');
+const navPosition={top:previousLevelList?.scrollTop??0,left:previousLevelList?.scrollLeft??0};
 const l=LEVELS[level-1],done=isGoalComplete(state),tools=l.tools.filter(t=>tab==='construct'?TOOLS[t].group!=='证明':TOOLS[t].group==='证明');
 root.innerHTML='<header class="top"><div class="logo">E<span>·</span></div><div class="logo-text"><b>EUCLID <em>LAB</em></b><small>从公设到定理 · INTERACTIVE GEOMETRY</small></div><div class="top-right"><span>● 证明实验室 v1.1</span><a target="_blank" rel="noreferrer" href="https://github.com/yangjunjun/Euclid_Lab">GitHub ↗</a></div></header>'
 +'<div class="layout"><aside class="sidebar"><div class="small-title">学习路径 <span>01 — 05</span></div><div class="progress-title">探索进度 <b>'+completed.size+' / '+LEVELS.length+'</b></div><div class="progress"><div style="width:'+(completed.size/LEVELS.length*100)+'%"></div></div><div class="level-list">'+LEVELS.map(x=>'<button data-level="'+x.id+'" class="level '+(x.id===level?'active':'')+'" '+(unlocked(x.id)?'':'disabled')+'><span class="level-num">'+(completed.has(x.id)?'✓':('0'+x.id).slice(-2))+'</span><span><b>'+escape(x.title)+'</b><small>'+escape(x.eyebrow)+'</small></span><i>'+(unlocked(x.id)?'→':'♧')+'</i></button>').join('')+'</div><div class="side-quote"><span>“</span><p>除了通过理解，没有通往几何学的皇家大道。</p><small>— 归于欧几里得的名言</small></div></aside>'
@@ -36,6 +38,19 @@ root.innerHTML='<header class="top"><div class="logo">E<span>·</span></div><div
 +'<div class="workspace lower"><section class="panel"><div class="panel-head"><strong><em>03</em> 推理记录</strong><span>'+state.steps.length+' STEPS</span></div><div class="proof" data-level="'+level+'">'+(state.steps.length?'<ol class="proof-steps" aria-label="推理步骤">'+state.steps.map((s,i)=>'<li class="step"><span class="step-num '+s.category+'">'+('0'+(i+1)).slice(-2)+'</span><div class="step-body"><strong>'+escape(s.title)+'</strong><small>'+escape(s.detail)+'</small></div><span class="step-check" aria-label="验证通过">✓</span></li>').join('')+'</ol>':'<div class="proof-empty"><span>⌁</span><b>每个伟大的证明，都始于第一步。</b><p>选择积木，构造你的第一条推理链。</p></div>')+(state.facts.length?'<div class="facts"><b>已证实的关系</b><div>'+state.facts.map(f=>'<span>'+escape(factText(f))+'</span>').join('')+'</div></div>':'')+'</div></section>'
 +'<section class="panel"><div class="panel-head"><strong><em>◎</em> 本关目标</strong><span>✳</span></div><div class="goal"><small>TO PROVE</small><h2>'+escape(l.target)+'</h2><div class="goal-state '+(done?'done':'')+'">'+(done?'✓ 目标已验证':'◌ 尚未完成证明')+'</div><p>'+(done?'成功。当前目标的全部必要逻辑条件已满足。':'完成必要构造与推理；系统依照规则验证结论，而不是依靠图形外观。')+'</p>'+(done?'<button class="primary" id="next">'+(level===LEVELS.length?'返回第一关 ↺':'进入下一关 →')+'</button>':'<button class="hint-btn" id="hint">'+(hint?'收起提示 ↑':'需要一点提示？ ↗')+'</button>'+(hint?'<div class="hint">'+escape(l.hint)+'</div>':''))+'</div></section></div>'
 +'<footer>EUCLID LAB ✳ AXIOMS → THEOREMS <span>确定性证明引擎 · 进度本地保存</span></footer></main></div>';
+const levelList=root.querySelector('.level-list');
+if(levelList){
+  levelList.scrollTop=navPosition.top;
+  levelList.scrollLeft=navPosition.left;
+  const activeLevel=levelList.querySelector('.level.active');
+  if(activeLevel){
+    const pane=levelList.getBoundingClientRect(),item=activeLevel.getBoundingClientRect();
+    if(item.top<pane.top)levelList.scrollTop-=pane.top-item.top+8;
+    else if(item.bottom>pane.bottom)levelList.scrollTop+=item.bottom-pane.bottom+8;
+    if(item.left<pane.left)levelList.scrollLeft-=pane.left-item.left+8;
+    else if(item.right>pane.right)levelList.scrollLeft+=item.right-pane.right+8;
+  }
+}
 const proofPane=root.querySelector('.proof');
 if(proofPane) proofPane.scrollTop=scrollToLatestStep?proofPane.scrollHeight:previousProofScroll;
 scrollToLatestStep=false;
