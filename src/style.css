@@ -47,3 +47,29 @@
   .proof { padding: 15px 12px; }
   .proof-steps .step { grid-template-columns: 28px minmax(0, 1fr) 16px; gap: 8px; }
 }
+
+
+/* Fifteen-level navigation: keep the current lesson accessible on desktop. */
+@media (min-width: 891px) {
+  .sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .sidebar .level-list {
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #bfd2c7 transparent;
+  }
+  .sidebar .side-quote { display: none; }
+}
+@media (max-width: 890px) {
+  .sidebar .level-list { overflow-x: auto; overflow-y: hidden; }
+}
+.form-inputs label { min-width: 0; overflow-wrap: anywhere; }
+.form-inputs select { min-width: 0; }
